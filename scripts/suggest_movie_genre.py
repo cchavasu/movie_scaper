@@ -3,7 +3,6 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import numpy as np
 import csv
-import matplotlib.pyplot as plt
 
 urls = {
     "action": "https://www.imdb.com/search/title/?title_type=feature&num_votes=25000,&genres=action&sort=num_votes,desc",
@@ -23,7 +22,7 @@ def fetch_movies(url):
     response.raise_for_status()
     return BeautifulSoup(response.content, 'html.parser')
 
-def extract_movies(soup, genre):
+def extract_movies(soup):
     movies = soup.find_all('div', class_="sc-b189961a-0 hBZnfJ") 
     data = []
     
@@ -37,17 +36,12 @@ def extract_movies(soup, genre):
     return data
 
 def save_to_csv(data, genre):
+    df = pd.DataFrame(data, columns=['Rank', 'Name', 'Rating', 'Year'])
     filename = f'imdbmovies_{genre}.csv'
-    with open(filename, mode='w', newline='', encoding='utf-8-sig') as file:
-        writer = csv.writer(file)
-        writer.writerow(['Rank', 'Name', 'Rating', 'Year'])
-        writer.writerows(data)
-
+    df.to_csv(filename, index=False, encoding='utf-8-sig')
+    
     print(f"Data has been written to the {genre} CSV file: {filename}")
-    with open(filename, mode='r', newline='') as file:
-        reader = csv.reader(file)
-        for row in reader:
-            print(row)
+    print(df)
 
 def main():
     while True:
@@ -59,7 +53,7 @@ def main():
             if user_input in urls:
                 print(f"Fetching movies for genre: {user_input}")
                 soup = fetch_movies(urls[user_input])
-                movies_data = extract_movies(soup, user_input)
+                movies_data = extract_movies(soup)
                 save_to_csv(movies_data, user_input)
             else:
                 print("Invalid genre. Please try again.")
